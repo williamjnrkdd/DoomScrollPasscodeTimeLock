@@ -6,7 +6,7 @@ name,release_timestamp
 test,1781892312
 */
 
-uint64_t retrieveReleaseTimestamp(char name[]){
+void retrieve_release_timestamp(){
     // open file / create file csv file
     // read table to find row with name
     // get release_timestamp
