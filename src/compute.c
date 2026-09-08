@@ -50,7 +50,7 @@ int compute_passcode(uint64_t release_timestamp){
     uint64_t base = 17707010320199972569;
     uint64_t result;
     time_t start_time  = clock() , end_time = clock();
-    while(((double) (end_time - start_time) / CLOCKS_PER_SEC) < (5 * 60)){
+    // while(((double) (end_time - start_time) / CLOCKS_PER_SEC) < (5 * 60)){
     while (count < 1386634965){
         // log("time: %f < %d \n", ((double) (end_time - start_time) / CLOCKS_PER_SEC), (5 * 60));
         result = modular_exponentiation(base, release_timestamp, PRIME_NUMBER);
