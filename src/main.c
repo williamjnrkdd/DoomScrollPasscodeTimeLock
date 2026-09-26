@@ -7,6 +7,7 @@
 #include "http_time_service.h"
 #include "time_conversion.h"    
 #include "compute.h"
+#include "clipboard.h"
 
     
 enum OPERATIONS {
@@ -87,7 +88,13 @@ int main(){
                 goto userInput;
         }
 
-        printf("Passcode: %04d \n", code);
+        char codeText[5];
+    
+        snprintf(codeText, sizeof(codeText), "%04d", code);
+
+        printf("Passcode: %s \n", codeText);
+        copy_to_clipboard(codeText);
+
         fflush(stdout);
     
 

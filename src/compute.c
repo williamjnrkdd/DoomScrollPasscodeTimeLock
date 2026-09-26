@@ -62,7 +62,7 @@ int compute_passcode(uint64_t release_timestamp){
     }
 
     printf("The number of cycles to give 5 minutes is: %d\n", count);
-    printf("The random base integer used is: %lu\n", base);
+    // printf("The random base integer used is: %lu\n", base);
     printf("The time is: %f\n", (double) (end_time - start_time) / CLOCKS_PER_SEC);
     printf("The result is: %lu\n", result);
 
