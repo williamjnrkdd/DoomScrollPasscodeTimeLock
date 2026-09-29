@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS=-Wall -Wextra -g -Iinclude -Ivendor
+CFLAGS=-Wall -Wextra -g -Iinclude -Ivendor -DHAVE_CONFIG_H
 LIBS = -lcurl
 
 VENDOR=$(wildcard vendor/*/*.c)

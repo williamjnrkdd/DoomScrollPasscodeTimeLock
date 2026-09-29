@@ -1,0 +1,1 @@
+int code_to_qrcode_png(char* code_text, char* target_file);
