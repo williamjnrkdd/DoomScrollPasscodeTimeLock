@@ -2,18 +2,34 @@
 #include <stdlib.h>
 
 #include "qrencode.h"
-#include "png.h"
 
-#define SCALE 10       // pixels per QR module
-#define BORDER 4       // quiet-zone modules
+#define SCALE 10
+#define BORDER 4
 
-int code_to_qrcode_png(char* code_text, char* target_file){
+
+int code_to_qrcode_image(
+    const char *code_text,
+    unsigned char **pixels,
+    int *width,
+    int *height
+) {
+    if (!code_text || !pixels || !width || !height) {
+        return EXIT_FAILURE;
+    }
+
+    *pixels = NULL;
+    *width = 0;
+    *height = 0;
+
+    /*
+     * Generate QR matrix.
+     */
     QRcode *qr = QRcode_encodeString(
         code_text,
-        0,                  /* version: 0 = automatic */
-        QR_ECLEVEL_M,      /* error correction */
+        0,
+        QR_ECLEVEL_M,
         QR_MODE_8,
-        1                   /* case sensitive */
+        1
     );
 
     if (!qr) {
@@ -22,114 +38,87 @@ int code_to_qrcode_png(char* code_text, char* target_file){
     }
 
     int modules = qr->width;
-    int image_modules = modules + 2 * BORDER;
 
-    int width = image_modules * SCALE;
-    int height = width;
+    int image_modules =
+        modules + (2 * BORDER);
 
-    FILE *fp = fopen(target_file, "wb");
-    if (!fp) {
-        perror(target_file);
+    int image_width =
+        image_modules * SCALE;
+
+    int image_height =
+        image_width;
+
+    /*
+     * One byte per pixel.
+     *
+     * 0   = black
+     * 255 = white
+     */
+    size_t pixel_count =
+        (size_t)image_width *
+        (size_t)image_height;
+
+    unsigned char *image =
+        malloc(pixel_count);
+
+    if (!image) {
+        fprintf(stderr, "Unable to allocate QR image\n");
+
         QRcode_free(qr);
+
         return EXIT_FAILURE;
     }
 
-    png_structp png = png_create_write_struct(
-        PNG_LIBPNG_VER_STRING,
-        NULL,
-        NULL,
-        NULL
-    );
-
-    if (!png) {
-        fclose(fp);
-        QRcode_free(qr);
-        return EXIT_FAILURE;
+    /*
+     * Start completely white.
+     */
+    for (size_t i = 0; i < pixel_count; i++) {
+        image[i] = 255;
     }
 
-     png_infop info = png_create_info_struct(png);
+    /*
+     * Render QR modules.
+     */
+    for (int y = 0; y < image_height; y++) {
 
-    if (!info) {
-        png_destroy_write_struct(&png, NULL);
-        fclose(fp);
-        QRcode_free(qr);
-        return EXIT_FAILURE;
-    }
+        int module_y =
+            (y / SCALE) - BORDER;
 
-    if (setjmp(png_jmpbuf(png))) {
-        png_destroy_write_struct(&png, &info);
-        fclose(fp);
-        QRcode_free(qr);
-        return EXIT_FAILURE;
-    }
+        for (int x = 0; x < image_width; x++) {
 
-    png_init_io(png, fp);
+            int module_x =
+                (x / SCALE) - BORDER;
 
-    png_set_IHDR(
-        png,
-        info,
-        width,
-        height,
-        8,
-        PNG_COLOR_TYPE_GRAY,
-        PNG_INTERLACE_NONE,
-        PNG_COMPRESSION_TYPE_DEFAULT,
-        PNG_FILTER_TYPE_DEFAULT
-    );
+            if (module_x < 0 ||
+                module_x >= modules ||
+                module_y < 0 ||
+                module_y >= modules) {
 
-    png_write_info(png, info);
-
-    /* Allocate one row */
-    png_bytep row = malloc(width);
-
-    if (!row) {
-        png_destroy_write_struct(&png, &info);
-        fclose(fp);
-        QRcode_free(qr);
-        return EXIT_FAILURE;
-    }
-
-    for (int y = 0; y < height; y++) {
-
-        int module_y = y / SCALE - BORDER;
-
-        for (int x = 0; x < width; x++) {
-
-            int module_x = x / SCALE - BORDER;
-
-            unsigned char pixel = 255;   /* white */
-
-            if (module_x >= 0 &&
-                module_x < modules &&
-                module_y >= 0 &&
-                module_y < modules) {
-
-                unsigned char qr_pixel =
-                    qr->data[module_y * modules + module_x];
-
-                /*
-                 * libqrencode stores the module color
-                 * in bit 0.
-                 */
-                if (qr_pixel & 1)
-                    pixel = 0;           /* black */
+                continue;
             }
 
-            row[x] = pixel;
-        }
+            unsigned char qr_pixel =
+                qr->data[
+                    module_y * modules +
+                    module_x
+                ];
 
-        png_write_row(png, row);
+            if (qr_pixel & 1) {
+
+                image[
+                    (size_t)y *
+                    (size_t)image_width +
+                    (size_t)x
+                ] = 0;
+            }
+        }
     }
 
-    free(row);
-
-    png_write_end(png, NULL);
-    png_destroy_write_struct(&png, &info);
-
-    fclose(fp);
     QRcode_free(qr);
 
-    printf("Created %s (%dx%d)\n", target_file, width, height);
+    *pixels = image;
+    *width = image_width;
+    *height = image_height;
 
     return EXIT_SUCCESS;
 }

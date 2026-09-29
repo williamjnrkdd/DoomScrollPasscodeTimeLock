@@ -9,6 +9,7 @@
 #include "compute.h"
 #include "clipboard.h"
 #include "qrcode_image_generator.h"
+#include "qrcode_display.h"
 
     
 enum OPERATIONS {
@@ -97,30 +98,50 @@ int main(){
         int code;
 
         if (user_action_choice == CREATE){
-            code = createPassCode();
+            // code = createPassCode();
+            code = 1234;
         }
         // else if (userChoice == RETRIEVE){
         //     code_int = retrievePassCode();
         // }
 
-        char codeText[5];
+        char code_text[5];
     
-        snprintf(codeText, sizeof(codeText), "%04d", code);
+        snprintf(code_text, sizeof(code_text), "%04d", code);
 
         if (user_output_choice == DISPLAY){
-            printf("Passcode: %s \n", codeText);
+            printf("Passcode: %s \n", code_text);
         }
         else if (user_output_choice == CLIPBOARD){
-            copy_to_clipboard(codeText);
+            copy_to_clipboard(code_text);
         }
-        else if (user_output_choice == QRCODE){
-            printf("Enter the path for the png file: \n");
-            fflush(stdout);
+        else if (user_output_choice == QRCODE ){
+            unsigned char *pixels = NULL;
+            int width = 0;
+            int height = 0;
+
+            if (code_to_qrcode_image(
+                    code_text,
+                    &pixels,
+                    &width,
+                    &height
+                ) != EXIT_SUCCESS) {
+
+                fprintf(stderr, "Failed to generate QR\n");
+                return EXIT_FAILURE;
+            }
+
+            int result =
+                display_qrcode(
+                    pixels,
+                    width,
+                    height
+                );
+
             
-            char path[100];
-            fgets(path , sizeof(path), stdin);
-            path[strcspn(path, "\n")] = '\0';
-            code_to_qrcode_png(codeText, path);
+            // QR image no longer needed
+            free(pixels);
+            
         }
 
         return 0;
