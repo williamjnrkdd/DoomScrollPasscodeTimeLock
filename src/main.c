@@ -98,8 +98,7 @@ int main(){
         int code;
 
         if (user_action_choice == CREATE){
-            // code = createPassCode();
-            code = 1234;
+            code = createPassCode();
         }
         // else if (userChoice == RETRIEVE){
         //     code_int = retrievePassCode();
@@ -120,8 +119,13 @@ int main(){
             int width = 0;
             int height = 0;
 
+
+            // add example.com/{code} for valid qrcode
+            char qrcode_text[17]; 
+            snprintf(qrcode_text, sizeof(qrcode_text), "example.com/%s", code_text);
+    
             if (code_to_qrcode_image(
-                    code_text,
+                    qrcode_text,
                     &pixels,
                     &width,
                     &height

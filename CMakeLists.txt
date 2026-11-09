@@ -58,24 +58,7 @@ FetchContent_MakeAvailable(curl)
 # SDL2
 # ============================================================
 
-set(SDL_SHARED OFF CACHE BOOL "" FORCE)
-set(SDL_STATIC ON CACHE BOOL "" FORCE)
-
-set(SDL_TESTS OFF CACHE BOOL "" FORCE)
-set(SDL_TEST_LIBRARY OFF CACHE BOOL "" FORCE)
-
-set(SDL_INSTALL OFF CACHE BOOL "" FORCE)
-set(SDL_INSTALL_TESTS OFF CACHE BOOL "" FORCE)
-
-FetchContent_Declare(
-    SDL2
-    GIT_REPOSITORY https://github.com/libsdl-org/SDL.git
-    GIT_TAG release-2.30.10
-    GIT_SHALLOW TRUE
-)
-
-FetchContent_MakeAvailable(SDL2)
-
+find_package(SDL2 REQUIRED)
 
 # ============================================================
 # Application sources
@@ -109,7 +92,7 @@ target_link_libraries(app PRIVATE
     qrencode
     cjson
     libcurl
-    SDL2::SDL2-static
+    SDL2::SDL2
 )
 
 
